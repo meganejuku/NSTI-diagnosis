@@ -11,32 +11,42 @@ st.write("以下の質問に答えてください（7段階評価）")
 # 各属性の質問リスト
 questions_dict = {
     "S-N": [
-        "よく計画を立てずに行動してしまう",
-        "新しいことに挑戦するのが好きだ",
-        "細かい部分より全体の流れを重視する",
-        "直感的に物事を捉える方だ",
-        "細かいディテールより全体のバランスを見て判断する"
+        "大人数の前だとやる気が出てくる",
+        "一人よりは二人、多ければ多いほどよい",
+        "みんなに注目されると気持ちが良い",
+        "一人は怖いものだ",
+        "他人は利用してなんぼだと思う",
+        "人を蹴落とすと気持ちが良い、たくさんやるべき",
+        "宇宙人はいると思う",
+        "世界中の人間を偉い順に並べると、自分は上位である"
     ],
     "A-Y": [
-        "大人数の場では元気が出る方だ",
-        "リスクを取ってでも面白そうなことをやりたい",
-        "予想外の展開を楽しむタイプだ",
-        "計画通りに進めるより、その場の流れで決める方が好き",
-        "新しい環境にすぐ適応できる"
+        "人生は、冒険だ",
+        "自分の未来は明るいと感じる",
+        "話しかけられるより、話しかける方が好きだ",
+        "周りの人に「もっと効率的に動けばいいのに」とよく思う",
+        "殺されるくらいなら、殺す",
+        "物事に出遅れることはあまりない",
+        "自分は流行に敏感だと感じる"
     ],
     "E-O": [
-        "物事を深く考えすぎてしまうことがある",
-        "慎重に行動することが多い",
-        "物事の可能性や未来をよく想像する",
-        "リスクを回避するために徹底的に準備をする",
-        "何か決断をするときに、長く考えることが多い"
+        "悲しくて泣いてしまうことはあまりない",
+        "お酒が好きだ",
+        "財布を落としても慌てずに行動できる自信がある",
+        "クレジットカードが好きだ",
+        "自分ならば、大抵のことは何とかなると思う",
+        "正直に言うと、賢いという自負がある",
+        "やるべきことをやる前でも遊べるタイプだ"
     ],
     "T-M": [
-        "気分の浮き沈みが激しい方だ",
-        "感情を素直に表現するタイプだ",
-        "何事も冷静に対処しようとする",
-        "物事に対して強い感情を抱きやすい",
-        "周囲の感情や雰囲気に影響されやすい"
+        "「どうしても」というなら、法律は破っても良いと思う",
+        "マジックが好きだ",
+        "引っ掛け問題に引っかからない自信がある",
+        "「生まれ変わるなら馬か牛」は当然馬",
+        "どんな物事に対しても、自分はある程度適応できると思う",
+        "好き嫌いは多い方だ",
+        "好きな数字は素数である",
+        "本当にお金に困ったことがある"
     ]
 }
 
@@ -47,19 +57,20 @@ options = [
 score_map = {"強く賛成": 3, "賛成": 2, "やや賛成": 1, "どちらでもない": 0, "やや反対": -1, "反対": -2, "強く反対": -3}
 
 # 各属性ごとに複数の質問をランダムで選択（セッションで保持）
-NUM_QUESTIONS_PER_ATTRIBUTE = 3
+NUM_QUESTIONS_PER_ATTRIBUTE = 4
 if "selected_questions" not in st.session_state:
-    st.session_state.selected_questions = {
-        key: random.sample(questions, NUM_QUESTIONS_PER_ATTRIBUTE) for key, questions in questions_dict.items()
-    }
+    selected_questions = []
+    for key, questions in questions_dict.items():
+        selected_questions.extend([(key, q) for q in random.sample(questions, NUM_QUESTIONS_PER_ATTRIBUTE)])
+    random.shuffle(selected_questions)  # ここで質問を完全にランダムにする
+    st.session_state.selected_questions = selected_questions
 selected_questions = st.session_state.selected_questions
 
 # 回答を保存する辞書
 responses = {}
-for key, questions in selected_questions.items():
-    for i, question in enumerate(questions):
-        st.subheader(f"{key}-{i+1}: {question}")
-        responses[f"{key}-{i}"] = st.radio("選択してください", options, index=3, key=f"q_{key}_{i}")
+for i, (key, question) in enumerate(selected_questions):
+    st.subheader(f"Q{i+1}: {question}")
+    responses[f"{key}-{i}"] = st.radio("選択してください", options, index=3, key=f"q_{i}")
 
 # 診断結果の計算
 if st.button("診断結果を見る"):
@@ -102,12 +113,12 @@ if st.button("診断結果を見る"):
     fig, ax = plt.subplots(figsize=(8, 5))
     y_pos = np.arange(len(attributes))
     
-    ax.barh(y_pos, left_percents, color='blue', label='左側 (S, A, E, T)')
-    ax.barh(y_pos, right_percents, color='red', left=[100 - x for x in right_percents], label='右側 (N, Y, O, M)')
+    ax.barh(y_pos, left_percents, color='blue', label='(S, A, E, T)')
+    ax.barh(y_pos, right_percents, color='red', left=[100 - x for x in right_percents], label='(N, Y, O, M)')
     
     ax.set_yticks(y_pos)
     ax.set_yticklabels(attributes)
-    ax.set_xlabel("割合 (%)")
+    ax.set_xlabel("percentage (%)")
     ax.set_xlim(0, 100)
     ax.legend()
     
